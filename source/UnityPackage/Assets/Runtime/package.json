@@ -1,0 +1,15 @@
+{
+    "name": "org.fenrirserver.moba.ecs",
+    "displayName": "Fenrir Moba ECS",
+    "description": "MOBA ECS",
+    "version": "1.0.0",
+    "author": {
+        "name": "Fenrir",
+        "email": "info@fenrirserver.com",
+        "url": "https://fenrirserver.com"
+    },
+    "unity": "2018.3",
+    "dependencies": {
+        "org.fenrirserver.multiplayer": "1.0.11"
+    }
+}

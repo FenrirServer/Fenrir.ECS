@@ -1,0 +1,16 @@
+{
+    "name": "Fenrir.ECS",
+    "rootNamespace": "",
+    "references": [
+        "GUID:57cbb2c710395734682b78f605a60905"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

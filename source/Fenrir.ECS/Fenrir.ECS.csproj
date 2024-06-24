@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\UnityPackage\Assets\Runtime\**\*.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Fenrir.Multiplayer" Version="1.0.26" />
+	  <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+	</ItemGroup>
+	
+</Project>

@@ -1,0 +1,16 @@
+{
+    "name": "org.fenrirserver.ecs",
+    "displayName": "Fenrir ECS",
+    "description": "Fenrir Deterministic Networked ECS (Entity Component System) Simulation",
+    "license": "MIT",
+    "version": "1.0.0",
+    "author": {
+        "name": "Fenrir",
+        "email": "info@fenrirserver.com",
+        "url": "https://fenrirserver.com"
+    },
+    "unity": "2018.3",
+    "dependencies": {
+        "org.fenrirserver.multiplayer": "1.0.26"
+    }
+}
