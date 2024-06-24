@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Fenrir.ECS
 {
-    class SimulationClient<TInput>
+    public class SimulationClient<TInput>
         : ISimulationClient
         , IEventHandler<ClockSyncAckEvent>
         , IEventHandler<SimulationTickEvent<TInput>>

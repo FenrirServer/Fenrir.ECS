@@ -1,6 +1,6 @@
 ﻿namespace Fenrir.ECS
 {
-    interface ISimulationClient
+    public interface ISimulationClient
     {
         Simulation Simulation { get; }
 
