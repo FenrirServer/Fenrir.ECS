@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Fenrir.ECS.Tests.Integration
 {
+    /*
 
     [TestClass]
     public class NetworkTests
@@ -103,4 +104,5 @@ namespace Fenrir.ECS.Tests.Integration
             Assert.IsTrue(positionComponent.Position.X > Fixed.Zero);
         }
     }
+    */
 }

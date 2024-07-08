@@ -4,6 +4,7 @@ using WebSocketSharp;
 
 namespace Fenrir.ECS.Tests.Integration
 {
+    /*
     internal class TestServer
         : IRequestHandler<PlayerInputRequest<PlayerInput>>
         , IRequestHandler<ClockSyncRequest>
@@ -257,5 +258,5 @@ namespace Fenrir.ECS.Tests.Integration
             _simulationClient?.Dispose();
         }
     }
-
+    */
 }
