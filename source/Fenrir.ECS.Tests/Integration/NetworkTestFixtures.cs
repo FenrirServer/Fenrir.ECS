@@ -5,7 +5,8 @@ using WebSocketSharp;
 namespace Fenrir.ECS.Tests.Integration
 {
     internal class TestServer
-        : IRequestHandler<PlayerInputRequest<PlayerInput>>
+        : IRequestHandlerAsync<GetSimulationStateRequest, GetSimulationStateResponse>
+        , IRequestHandler<PlayerInputRequest<PlayerInput>>
         , IRequestHandler<ClockSyncRequest>
     {
         private readonly TestLogger _logger;
@@ -77,6 +78,21 @@ namespace Fenrir.ECS.Tests.Integration
             peer.SendEvent(simulationClockSyncAckEvent);
         }
 
+        async Task<GetSimulationStateResponse> IRequestHandlerAsync<GetSimulationStateRequest, GetSimulationStateResponse>.HandleRequestAsync(GetSimulationStateRequest request, IServerPeer peer)
+        {
+            if (peer.PeerData == null)
+            {
+                // Not in the room
+                return new GetSimulationStateResponse() { Success = false };
+            }
+
+            var player = (TestServerPlayer)peer.PeerData;
+
+            // Get room
+            var room = player.Room;
+
+            return await room.ExecuteAsync(() => room.GetSimulationState(request));
+        }
         #endregion
     }
 
@@ -173,7 +189,7 @@ namespace Fenrir.ECS.Tests.Integration
 
         void IByteStreamSerializable.Deserialize(IByteStreamReader reader)
         {
-            PlayerReference.Deserialize(reader, ref Player);
+            Player = reader.Read<PlayerReference>();
         }
 
         void IByteStreamSerializable.Serialize(IByteStreamWriter writer)
@@ -213,7 +229,9 @@ namespace Fenrir.ECS.Tests.Integration
             _simulationClient.Simulation.AddSystem(new TestInputDispatchSystem(_simulationClient.Simulation.ECSWorld, _simulationClient.InputBuffer));
             _simulationClient.Simulation.AddSystem(new TestMoveSystem(_simulationClient.Simulation.ECSWorld));
 
-            _simulationClient.Start(evt.Players, evt.SimulationStartTime);
+            var response = await _simulationClient.NetworkClient.Peer.SendRequest<GetSimulationStateRequest, GetSimulationStateResponse>(new GetSimulationStateRequest());
+
+            _simulationClient.Start(response.SimulationState);
         }
 
         public void Disconnect()

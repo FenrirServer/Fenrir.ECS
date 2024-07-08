@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Fenrir.Multiplayer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -6,23 +7,25 @@ using System.Runtime.InteropServices;
 
 namespace Fenrir.ECS
 {
-    public unsafe class ComponentCollection
+    public unsafe class ComponentCollection : IByteStreamSerializable
     {
+        private const int _version = 1;
+
         private const int _initialSize = 16; // doubled every time we need more entities
 
-        private readonly int _id;
+        private int _id;
 
-        private readonly Type[] _componentTypes;
+        private Type[] _componentTypes;
 
-        private readonly HashSet<Type> _componentTypesHashSet;
+        private HashSet<Type> _componentTypesHashSet;
 
-        private readonly int[] _componentOffsets;
+        private int[] _componentOffsets;
 
-        private readonly int[] _componentSizes;
+        private int[] _componentSizes;
 
-        private readonly Dictionary<Type, int> _componentIndexes;
+        private Dictionary<Type, int> _componentIndexes;
 
-        private readonly int _blockSizeBytes;
+        private int _blockSizeBytes;
 
         private byte[] _componentData;
 
@@ -45,13 +48,18 @@ namespace Fenrir.ECS
 
         public ComponentCollection(int id, params Type[] componentTypes)
         {
+            // Initialize
+            Initialize(id, componentTypes);
+        }
+
+        private void Initialize(int id, Type[] componentTypes)
+        {
             // Check arguments
-            if(componentTypes.Length == 0)
+            if (componentTypes.Length == 0)
             {
                 throw new ArgumentException($"{nameof(componentTypes)} can not be empty", nameof(componentTypes));
             }
 
-            // Initialize
             _id = id;
             _componentTypes = componentTypes;
             _componentTypesHashSet = new HashSet<Type>(componentTypes);
@@ -392,6 +400,29 @@ namespace Fenrir.ECS
         public override string ToString()
         {
             return string.Join(",", _componentTypes.Select(t => t.Name));
+        }
+
+        public void Serialize(IByteStreamWriter writer)
+        {
+            writer.Write(_version);
+            writer.Write(_id);
+            writer.WriteArray(_componentTypes.Select(type => type.ToString()).ToArray());
+        }
+
+        public void Deserialize(IByteStreamReader reader)
+        {
+            int version = reader.ReadInt();
+            int id = reader.ReadInt();
+            string[] componentTypeNames = reader.ReadStringArray();
+
+            Type[] componentTypes = new Type[componentTypeNames.Length];
+            for (int i = 0; i < componentTypeNames.Length; i++)
+            {
+                string componentTypeName = componentTypeNames[i];
+                componentTypes[i] = Type.GetType(componentTypeName, true);
+            }
+
+            Initialize(id, componentTypes);
         }
     }
 }

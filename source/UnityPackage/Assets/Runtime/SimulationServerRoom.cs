@@ -2,6 +2,8 @@
 using Fenrir.Multiplayer.Rooms;
 using System.Collections.Generic;
 using System;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace Fenrir.ECS
 {
@@ -238,6 +240,19 @@ namespace Fenrir.ECS
         protected virtual TInput PredictInput(TInput previousInput)
         {
             return previousInput;
+        }
+
+        public GetSimulationStateResponse GetSimulationState(GetSimulationStateRequest request)
+        {
+            var state = new SimulationState()
+            {
+                CurrentTick = _simulation.CurrentTick,
+                CurrentTickTime = _clock.UtcNow + _simulation.CurrentTickTime,
+                CurrentTickData = _simulation.GetCurrentTickData(),
+                Players = _players.ToList()
+            };
+
+            return new GetSimulationStateResponse(state);
         }
     }
 }

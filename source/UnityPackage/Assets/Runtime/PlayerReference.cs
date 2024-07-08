@@ -7,8 +7,13 @@ namespace Fenrir.ECS
     /// Represents Player Reference 
     /// sent over the wire
     /// </summary>
-    public struct PlayerReference
+    public struct PlayerReference : IByteStreamSerializable
     {
+        /// <summary>
+        /// Data version
+        /// </summary>
+        private const int _version  = 1;
+
         /// <summary>
         /// Number of this player
         /// </summary>
@@ -19,14 +24,16 @@ namespace Fenrir.ECS
         /// </summary>
         public Guid PeerId { get; set; }
 
-        public static void Deserialize(IByteStreamReader reader, ref PlayerReference player)
+        public void Deserialize(IByteStreamReader reader)
         {
-            player.PlayerId = reader.ReadByte();
-            player.PeerId = Guid.Parse(reader.ReadString());
+            int version = reader.ReadByte();
+            PlayerId = reader.ReadByte();
+            PeerId = Guid.Parse(reader.ReadString());
         }
 
         public void Serialize(IByteStreamWriter writer)
         {
+            writer.Write(_version);
             writer.Write(PlayerId);
             writer.Write(PeerId.ToString());
         }

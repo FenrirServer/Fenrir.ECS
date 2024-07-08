@@ -1,12 +1,18 @@
-﻿using System;
+﻿using Fenrir.Multiplayer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 
 namespace Fenrir.ECS
 {
-    public class ArchetypeCollection
+    public class ArchetypeCollection : IByteStreamSerializable
     {
+        /// <summary>
+        /// Data version
+        /// </summary>
+        private const int _version = 1;
+
         /// <summary>
         /// List of registered archetypes
         /// </summary>
@@ -362,6 +368,34 @@ namespace Fenrir.ECS
         public ArchetypeEnumerable GetArchetypesContainingAny(params Type[] componentTypes)
         {
             return new ArchetypeEnumerable(this, ArchetypeQueryType.Any, componentTypes);
+        }
+
+        public void Serialize(IByteStreamWriter writer)
+        {
+            writer.Write(_version);
+            writer.Write(_archetypes);
+        }
+
+        public void Deserialize(IByteStreamReader reader)
+        {
+            int version = reader.ReadInt();
+
+            var archetypes = reader.Read<List<ComponentCollection>>();
+
+            // Create componentToArchetypeList
+            foreach (var archetype in archetypes)
+            {
+                _archetypes.Add(archetype);
+
+                foreach (Type componentType in archetype.ComponentTypes)
+                {
+                    if (!_componentToArchetypeList.ContainsKey(componentType))
+                    {
+                        _componentToArchetypeList.Add(componentType, new List<ComponentCollection>());
+                    }
+                    _componentToArchetypeList[componentType].Add(archetype);
+                }
+            }
         }
     }
 }

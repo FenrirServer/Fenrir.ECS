@@ -28,11 +28,6 @@ namespace Fenrir.ECS
         public PlayerReference ThisPlayer => _thisPlayer;
 
         /// <summary>
-        /// Simulation start time
-        /// </summary>
-        public DateTime SimulationStartTime => _simulationStartTime;
-
-        /// <summary>
         /// Simulation
         /// </summary>
         public Simulation Simulation => _simulation;
@@ -189,7 +184,7 @@ namespace Fenrir.ECS
         /// <summary>
         /// List of all players in the simulation
         /// </summary>
-        private PlayerReference[] _players = null;
+        private List<PlayerReference> _players = null;
 
         /// <summary>
         /// A player controlled by this client
@@ -308,15 +303,14 @@ namespace Fenrir.ECS
         #endregion
 
         #region Simulation
-        public void Start(PlayerReference[] players, DateTime simulationStartTime)
+        public void Start(SimulationState initialState)
         {
-            _players = players;
-            _thisPlayer = players.Where(player => _networkClient.Peer.Id == player.PeerId.ToString()).First();
-            _simulationStartTime = simulationStartTime;
+            _players = initialState.Players;
+            _thisPlayer = _players.Where(player => _networkClient.Peer.Id == player.PeerId.ToString()).First();
 
             _isRunning = true;
 
-            Task.Run(() => RunTickThread(_simulationStartTime));
+            Task.Run(() => RunTickThread(initialState));
         }
 
         public void Stop()
@@ -325,22 +319,29 @@ namespace Fenrir.ECS
             _clockSyncInitTcs = null;
         }
 
-        private async Task RunTickThread(DateTime firstTickTime)
+        private async Task RunTickThread(SimulationState initialState)
         {
             // Manually poll network client events before this tick
             _networkClient.PollEvents();
 
-            // Wait until simulation start time
-            TimeSpan firstTickIn = firstTickTime - SimulationTime;
-            await Task.Delay(firstTickIn > TimeSpan.Zero ? firstTickIn : TimeSpan.Zero);
+            // Set initial simulation state
+            _simulation.CurrentTick = initialState.CurrentTick;
 
-            Stopwatch sw = new Stopwatch();
+            // Set the initial tick data
+            _simulation.ECSWorld.SetTickData(initialState.CurrentTickData);
+
+            // Calculate time of the first simulation tick
+            DateTime firstTickTime = initialState.CurrentTickTime - Simulation.TimePerTick * initialState.CurrentTick;
 
             // Run ticks
             while (_isRunning && _networkClient.State == ConnectionState.Connected)
             {
-                sw.Start();
+                // Wait for the current tick
+                DateTime currentTickTime = firstTickTime + _simulation.CurrentTickTime; // first tick time +  current tick * ms per tick
+                TimeSpan currentTickIn = currentTickTime - SimulationTime;
+                await Task.Delay(currentTickIn > TimeSpan.Zero ? currentTickIn : TimeSpan.Zero);
 
+                // Tick
                 lock (_syncRoot)
                 {
                     try
@@ -353,17 +354,6 @@ namespace Fenrir.ECS
                         _logger.Error("Uncaught exception during simulation Tick()");
                     }
                 }
-
-                sw.Stop();
-
-
-                DateTime currentTickTime = firstTickTime + _simulation.CurrentTickTime;
-                TimeSpan currentTickIn = currentTickTime - SimulationTime;
-
-                //_logger.Info($"Waiting for tick {_simulation.CurrentTick} at {SimulationTime.ToString("h:m:s.ffff")}. Previous tick took {sw.ElapsedMilliseconds} ms to process. Current tick is at {nextTickTime.ToString("h:m:s.ffff")}, waiting for {nextTickIn} until current tick");
-
-                sw.Reset();
-                await Task.Delay(currentTickIn > TimeSpan.Zero ? currentTickIn : TimeSpan.Zero);
             }
         }
 
@@ -563,8 +553,8 @@ namespace Fenrir.ECS
         {
             // TODO: Replace this garbage with a re-usable buffer
 
-            TInput[] predictedInputs = new TInput[_players.Length];
-            for (int numPlayer = 0; numPlayer < _players.Length; numPlayer++)
+            TInput[] predictedInputs = new TInput[_players.Count];
+            for (int numPlayer = 0; numPlayer < _players.Count; numPlayer++)
             {
                 PlayerReference player = _players[numPlayer];
                 if (player.PlayerId == _thisPlayer.PlayerId)
@@ -755,6 +745,7 @@ namespace Fenrir.ECS
         }
 
         #endregion
+
 
         public void Dispose()
         {

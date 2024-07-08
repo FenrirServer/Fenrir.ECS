@@ -460,6 +460,11 @@ namespace Fenrir.ECS
             return currentSnapshot.Value.TickData;
         }
 
+        internal void SetTickData(ArchetypeCollection currentTickData)
+        {
+            currentTickData.CopyTo(CurrentTickData);
+        }
+
         public CommitResult GetTickCommitResult(int numTicksAgo)
         {
             LinkedListNode<TickSnapshot> currentSnapshot = _snapshots.Last;
